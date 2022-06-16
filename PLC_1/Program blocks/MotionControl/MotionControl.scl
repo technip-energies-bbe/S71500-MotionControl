@@ -1,0 +1,118 @@
+﻿FUNCTION_BLOCK "MotionControl"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      easyDriveOn : Bool;
+      motionControlEnable : Bool;
+      setpoints : Array[1.."AXIS_NUM"] of Real;
+      angleSensors : Array[1.."AXIS_NUM"] of Real;
+      armParam : "typeArmParam";
+      timeCycle : Real;
+   END_VAR
+
+   VAR_OUTPUT 
+      finalSetpointProps : Array[1.."AXIS_NUM"] of Real;
+   END_VAR
+
+   VAR 
+      InstRemoteInputs { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'; S7_SetPoint := 'False'} : "RemoteInputs";
+      InstAngularInputs { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'; S7_SetPoint := 'False'} : "AngularInputs";
+      InstCartTrajectoryPlan : "CartTrajectoryPlan";
+      InstAxisRegulations { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'; S7_SetPoint := 'False'} : "AxisRegulations";
+      InstSetpointOutputs { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'; S7_SetPoint := 'False'} : "SetpointOutputs";
+      InstFirstOrderFilter { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'; S7_SetPoint := 'False'} : "FirstOrderFilter";
+      sat { S7_SetPoint := 'True'} : Bool := FALSE;
+      setpointProps { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      cartTajectoryPlan_SetSpeed { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      setSpeeds { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      angles { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      cartPos { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      setpointCarts { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      setpointConv { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      setpointAngles { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      setpointEasy { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      moveStatus { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'; S7_SetPoint := 'False'} : "typeMoveStatus";
+   END_VAR
+
+
+BEGIN
+	(* MotionControl module for hydraulic proportionnal system :
+	- conventionnal mode (angular control)
+	- easyDrive mode (cartesian control) *)
+	
+	(* Process remote inputs *)
+	#InstRemoteInputs(easyDriveOn := #easyDriveOn,
+	                  enable := #motionControlEnable,
+	                  inputs := #setpoints,
+	                  timeCycle := #timeCycle,
+	                  motionControlParam := #armParam.motionControlParam,
+	                  outputs => #setSpeeds,
+	                  status => #moveStatus);
+	
+	(* Process angular inputs from CPMS sensors *)
+	#InstAngularInputs(inputs := #angleSensors,
+	                   angleInputParam := #armParam.motionControlParam.angleInputParam,
+	                   timeCycle := #timeCycle,
+	                   outputs => #angles);
+	
+	(* Calculate cartesian position of the n°4 rotation from
+	CPMS sensors *)
+	"ForwardKinematicSimple"(angles := #angles,
+	                         armGeom := #armParam.armGeom,
+	                         pos => #cartPos);
+	
+	(* Calculate conventionnal trajectory *)
+	"ConvTrajectoryPlan"(motionControlParam := #armParam.motionControlParam,
+	                     setSpeeds := #setSpeeds,
+	                     angleSpeeds => #setpointConv);
+	
+	(* Calculate cartesian trajectory in cartesian space *)
+	#InstCartTrajectoryPlan(setSpeeds := #setSpeeds,
+	                        motionControlParam := #armParam.motionControlParam,
+	                        enable := #moveStatus.global AND #easyDriveOn AND #motionControlEnable,
+	                        timeCycle := #timeCycle,
+	                        sat := #sat,
+	                        armPos := #cartPos,
+	                        setPos => #setpointCarts);
+	
+	(* Calculate cartesian trajectory in angular space with
+	the inverse kinametic module *)
+	"InverseKinematicSimple"(armGeom := #armParam.armGeom,
+	                         pos := #setpointCarts,
+	                         angles => #setpointAngles);
+	
+	(* Module for axis regulation in angular space :
+	- feedforward option
+	- proportional, derivative, integral options *)
+	#InstAxisRegulations(regulParams := #armParam.motionControlParam.regulParams,
+	                     enable := #motionControlEnable AND #easyDriveOn,
+	                     timeCycle := #timeCycle,
+	                     process := #angles,
+	                     setpoints := #setpointAngles,
+	                     outputs => #setpointEasy);
+	
+	(* Calculate the right setpoint to the associated proportionnal
+	valves to have the "good" angular speed *)
+	"ArmCompliance"(angles := #angles,
+	                armParam := #armParam,
+	                easyDriveOn := #easyDriveOn,
+	                moveStatus := #moveStatus,
+	                setpointConv := #setpointConv,
+	                setpointCart := #setpointEasy,
+	                setpointProps => #setpointProps);
+	
+	(* Final processing of hydraulic valves setpoint :
+	- Jump to limit the influence of proportionnal valve non-linearity
+	- Saturate the setpoint 
+	- Detect hydraulic saturation to limit the inputs (signal shaping) *)
+	#InstSetpointOutputs(motionControlParam := #armParam.motionControlParam,
+	                     timeCycle := #timeCycle,
+	                     axisParams := #armParam.axisParams,
+	                     setpointProps := #setpointProps,
+	                     finalSetpointProps => #finalSetpointProps,
+	                     sat => #sat);
+	
+	
+	
+END_FUNCTION_BLOCK
+

@@ -1,0 +1,17 @@
+﻿FUNCTION "Scaling" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      input : Real;
+      scaleParam : "typeScaleParam";
+   END_VAR
+
+
+BEGIN
+	
+	(* Module for linear scaling : y = ax + b *)
+	
+	#Scaling := #scaleParam.a * #input + #scaleParam.b;
+	
+END_FUNCTION
+

@@ -1,0 +1,71 @@
+﻿FUNCTION_BLOCK "AxisRegulation"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      setpoint : Real;
+      process : Real;
+      enable : Bool;
+      timeCycle : Real;
+      regulParam : "typeRegulParam";
+   END_VAR
+
+   VAR_OUTPUT 
+      output : Real;
+   END_VAR
+
+   VAR 
+      setpointMem : Real := 0.0;
+      processMem : Real := 0.0;
+      contribIntMem : Real := 0.0;
+   END_VAR
+
+   VAR_TEMP 
+      cI : Real;
+      cD : Real;
+      contribInt : Real;
+      A1 : Real;
+      A2 : Real;
+      A3 : Real;
+      A4 : Real;
+   END_VAR
+
+
+BEGIN
+	
+	(* PID process with feedforward *)
+	
+	(* Gain calculation *)
+	#cI := #regulParam.kP * #timeCycle / #regulParam.tI;
+	#cD := #regulParam.kP * #regulParam.tD / #timeCycle;
+	
+	(* Main calculation *)
+	IF #enable THEN
+	    #A1 := 1 / #timeCycle * (- #regulParam.pOn * #regulParam.kP
+	    - #regulParam.iOn * #cI - #regulParam.dOn * #cD) * #process;
+	    
+	    #A2 := 1 / #timeCycle * #regulParam.dOn * #cD * #processMem;
+	    
+	    #A3 := 1 / #timeCycle * (#regulParam.pOn * #regulParam.kP
+	    + #regulParam.iOn * #cI + #regulParam.dOn * #cD
+	    + #regulParam.fOn) * #setpoint;
+	    
+	    #A4 := 1 / #timeCycle * (- #regulParam.dOn * #cD
+	    - #regulParam.fOn) * #setpointMem;
+	    
+	    #contribInt := #contribIntMem + #regulParam.iOn * #cI
+	    / #timeCycle * (#setpoint - #process);
+	    
+	    #output := #A1 + #A2 + #A3 + #A4 + #contribIntMem;
+	    
+	ELSE
+	    #output := 0.0;
+	    #contribIntMem := 0.0;
+	END_IF;
+	
+	(* Memory update *)
+	#setpointMem := #setpoint;
+	#processMem := #process;
+	#contribIntMem := #contribInt;
+	
+END_FUNCTION_BLOCK
+

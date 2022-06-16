@@ -1,0 +1,50 @@
+﻿FUNCTION "SetpointCheck" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      setSpeeds : Array[1.."AXIS_NUM"] of Real;   // Consignes des vitesses utilisateurs (%)
+      motionControlParam : "typeMotionControlParam";   // Paramètres easydrive
+   END_VAR
+
+   VAR_OUTPUT 
+      status : "typeMoveStatus";   // Etat des sollicitations utilisateurs
+   END_VAR
+
+   VAR_TEMP 
+      axisCounter : Int;
+      condition : Bool;
+   END_VAR
+
+
+BEGIN
+	
+	(* User's setpoint status calculation*)
+	#condition := TRUE;
+	
+	FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	    #condition := #condition AND ABS(#setSpeeds[#axisCounter]) < #motionControlParam.minSpeed;
+	END_FOR;
+	
+	
+	(* Global setpoint detected *)
+	IF #condition THEN
+	    #status.global := FALSE;
+	ELSE
+	    #status.global := TRUE;
+	END_IF;
+	
+	
+	(* Axis setpoint detected*)
+	FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	    IF ABS(#setSpeeds[#axisCounter]) < #motionControlParam.minSpeed THEN
+	        #status.axis[#axisCounter] := FALSE;
+	    ELSE
+	        #status.axis[#axisCounter] := TRUE;
+	    END_IF;
+	END_FOR;
+	
+	
+	
+	
+END_FUNCTION
+

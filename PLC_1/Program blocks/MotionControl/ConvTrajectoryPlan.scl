@@ -1,0 +1,28 @@
+﻿FUNCTION "ConvTrajectoryPlan" : Void
+{ S7_Optimized_Access := 'TRUE' }
+FAMILY : EasyDrive
+VERSION : 0.1
+//Ancien block CON
+   VAR_INPUT 
+      setSpeeds : Array[1.."AXIS_NUM"] of Real;
+      motionControlParam : "typeMotionControlParam";
+   END_VAR
+
+   VAR_OUTPUT 
+      angleSpeeds : Array[1.."AXIS_NUM"] of Real;
+   END_VAR
+
+   VAR_TEMP 
+      axisCounter : Int;
+   END_VAR
+
+
+BEGIN
+	(* Trajectory calculation in conventionnal mode *)
+	
+	FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	    #angleSpeeds[#axisCounter] := #setSpeeds[#axisCounter] * #motionControlParam.angularSpeedGains[#axisCounter];
+	END_FOR;
+	
+END_FUNCTION
+
