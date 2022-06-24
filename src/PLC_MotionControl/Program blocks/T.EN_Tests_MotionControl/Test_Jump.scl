@@ -1,0 +1,73 @@
+﻿FUNCTION "Test_Jump" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      axisParam : "typeAxisParam";
+      input : Real;
+      output : Real;
+      outputRef : Real;
+      outputDeadBand : Real;
+      testResult : Bool;
+   END_VAR
+
+
+BEGIN
+	(* First case ... direct calculation *)
+	#axisParam.setpointJump := 0.3;
+	#axisParam.setpointMin := 0.0001;
+	#input := 0.5;
+	#outputRef := 0.649964;
+	#output := "Jump"(axisParam := #axisParam,
+	                  input := #input);
+	#testResult := "Test_RealError"(errorType := 'abs',
+	                                tol := 1.0e-3,
+	                                value := #output,
+	                                reference := #outputRef);
+	
+	(* Second case ... verification with the DeadBand module *)
+	"Test_Deadband"(deadbandValue := 0.3,
+	                input := #output,
+	                output => #outputDeadBand);
+	
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #outputDeadBand,
+	                                                reference := #input);
+	
+	(* Third case ... negative direct calculation *)
+	#axisParam.setpointJump := 0.2;
+	#axisParam.setpointMin := 0.0001;
+	#input := -0.8;
+	#outputRef := -0.83998;
+	#output := "Jump"(axisParam := #axisParam,
+	                  input := #input);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #output,
+	                                                reference := #outputRef);
+	
+	(* Case n°4 ... verification with the DeadBand module *)
+	"Test_Deadband"(deadbandValue := 0.2,
+	                input := #output,
+	                output => #outputDeadBand);
+	
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #outputDeadBand,
+	                                                reference := #input);
+	
+	(* Case n°5 ... Direct calculation at 0.0 *)
+	#axisParam.setpointJump := 0.2;
+	#axisParam.setpointMin := 0.1;
+	#input := 0.05;
+	#outputRef := 0.0;
+	#output := "Jump"(axisParam := #axisParam,
+	                  input := #input);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #output,
+	                                                reference := #outputRef);
+	
+	#Test_Jump := #testResult;
+END_FUNCTION
+

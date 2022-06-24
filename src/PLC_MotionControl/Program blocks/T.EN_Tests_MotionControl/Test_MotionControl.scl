@@ -1,0 +1,61 @@
+﻿FUNCTION_BLOCK "Test_MotionControl"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_OUTPUT 
+      testResult : Bool;
+   END_VAR
+
+   VAR 
+      InstTest_FirstOrderFilter : "Test_FirstOrderFilter";
+      InstTest_RemoteInputs : "Test_RemoteInputs";
+      InstTest_CartTrajectoryPlan : "Test_CartTrajectoryPlan";
+      InstTest_AxisRegulation : "Test_AxisRegulation";
+   END_VAR
+
+   VAR_TEMP 
+      result : Bool;
+   END_VAR
+
+
+BEGIN
+	(* Tests Kinematics *)
+	#testResult := "Test_Atan2"();
+	
+	#testResult := #testResult AND "Test_ForwardKinematicSimple"();
+	
+	#testResult := #testResult AND "Test_InverseKinematicSimple"();
+	
+	#testResult := #testResult AND "Test_KinematicSimple"();
+	
+	(* Tests processing modules *)
+	#testResult := #testResult AND "Test_Scaling"();
+	
+	(* Test Filter *)
+	#InstTest_FirstOrderFilter(testResult => #result);
+	#testResult := #testResult AND #result;
+	
+	(* Test RemoteInputs module *)
+	#InstTest_RemoteInputs(testResult => #result);
+	#testResult := #testResult AND #result;
+	
+	(* Test CartTrajectoryPlan module *)
+	#InstTest_CartTrajectoryPlan(testResult => #result);
+	#testResult := #testResult AND #result;
+	
+	(* Test AxisRegulation module *)
+	#InstTest_AxisRegulation(testResult => #result);
+	#testResult := #testResult AND #result;
+	
+	(* Test ArmCompliance modules *)
+	#testResult := #testResult AND "Test_HydraulicFlow"();
+	#testResult := #testResult AND "Test_ArmTypeAdapt"();
+	#testResult := #testResult AND "Test_HydraulicLever"();
+	#testResult := #testResult AND "Test_MechanicalLever"();
+	
+	(* Test SetpointOutputs modules *)
+	#testResult := #testResult AND "Test_Jump"();
+	#testResult := #testResult AND "Test_Sat"();
+	
+	
+END_FUNCTION_BLOCK
+

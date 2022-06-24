@@ -1,0 +1,127 @@
+﻿FUNCTION "Test_HydraulicLever" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      axisParam : "typeAxisParam";
+      axisSpeed : Real;
+      hydraulicLever : Real;
+      hydraulicLeverRef : Real;
+      testResult : Bool;
+   END_VAR
+
+
+BEGIN
+	(* First Case : double rod cylinder on sheave *)
+	#axisParam.axisType := 'sheave';
+	#axisParam.cylinderType := 'diff';
+	#axisParam.pistonDiam := 160.0e-3;
+	#axisParam.rodDiam := 90.0e-3;
+	#axisSpeed := 0.0;
+	#hydraulicLeverRef := 1.374e-2;
+	#hydraulicLever := "HydraulicLever"(axisParam := #axisParam,
+	                                    axisSpeed := #axisSpeed);
+	
+	#testResult := "Test_RealError"(errorType := 'abs',
+	                                tol := 1.0e-3,
+	                                value := #hydraulicLever,
+	                                reference := #hydraulicLeverRef);
+	
+	(* Second Case : double single rod cylinder on a sheave *)
+	#axisParam.axisType := 'double';
+	#axisParam.cylinderType := 'diff';
+	#axisParam.pistonDiam := 130.0e-3;
+	#axisParam.rodDiam := 40.0e-3;
+	#axisSpeed := 0.0;
+	#hydraulicLeverRef := 1.2e-2;
+	#hydraulicLever := "HydraulicLever"(axisParam := #axisParam,
+	                                    axisSpeed := #axisSpeed);
+	
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #hydraulicLever,
+	                                                reference := #hydraulicLeverRef);
+	
+	(* Case n°7 : symmetric cylinder on direct drive *)
+	#axisParam.axisType := 'direct';
+	#axisParam.cylinderType := 'sym';
+	#axisParam.pistonDiam := 130.0e-3;
+	#axisParam.rodDiam := 40.0e-3;
+	#axisSpeed := 0.0;
+	#hydraulicLeverRef := 1.2e-2;
+	#hydraulicLever := "HydraulicLever"(axisParam := #axisParam,
+	                                    axisSpeed := #axisSpeed);
+	
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #hydraulicLever,
+	                                                reference := #hydraulicLeverRef);
+	
+	
+	(* Third Case : single rod cylinder in a positive direction and positive speed *)
+	#axisParam.axisType := 'direct';
+	#axisParam.cylinderType := 'diff';
+	#axisParam.pistonDiam := 130.0e-3;
+	#axisParam.rodDiam := 40.0e-3;
+	#axisSpeed := 1.0;
+	#axisParam.cylinderDir := 1.0;
+	#hydraulicLeverRef := 1.327e-2;
+	#hydraulicLever := "HydraulicLever"(axisParam := #axisParam,
+	                                    axisSpeed := #axisSpeed);
+	
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #hydraulicLever,
+	                                                reference := #hydraulicLeverRef);
+	
+	(* Case n°4 : single rod cylinder in a positive direction and negative speed *)
+	#axisParam.axisType := 'direct';
+	#axisParam.cylinderType := 'diff';
+	#axisParam.pistonDiam := 130.0e-3;
+	#axisParam.rodDiam := 40.0e-3;
+	#axisSpeed := -1.0;
+	#axisParam.cylinderDir := 1.0;
+	#hydraulicLeverRef := 1.2e-2;
+	#hydraulicLever := "HydraulicLever"(axisParam := #axisParam,
+	                                    axisSpeed := #axisSpeed);
+	
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #hydraulicLever,
+	                                                reference := #hydraulicLeverRef);
+	
+	(* Case n°5 : single rod cylinder in a negative direction and positive speed *)
+	#axisParam.axisType := 'direct';
+	#axisParam.cylinderType := 'diff';
+	#axisParam.pistonDiam := 130.0e-3;
+	#axisParam.rodDiam := 40.0e-3;
+	#axisSpeed := 1.0;
+	#axisParam.cylinderDir := -1.0;
+	#hydraulicLeverRef := 1.2e-2;
+	#hydraulicLever := "HydraulicLever"(axisParam := #axisParam,
+	                                    axisSpeed := #axisSpeed);
+	
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #hydraulicLever,
+	                                                reference := #hydraulicLeverRef);
+	
+	(* Case n°6 : single rod cylinder in a negative direction and negative speed *)
+	#axisParam.axisType := 'direct';
+	#axisParam.cylinderType := 'diff';
+	#axisParam.pistonDiam := 130.0e-3;
+	#axisParam.rodDiam := 40.0e-3;
+	#axisSpeed := -1.0;
+	#axisParam.cylinderDir := -1.0;
+	#hydraulicLeverRef := 1.327e-2;
+	#hydraulicLever := "HydraulicLever"(axisParam := #axisParam,
+	                                    axisSpeed := #axisSpeed);
+	
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #hydraulicLever,
+	                                                reference := #hydraulicLeverRef);
+	
+	
+	#Test_HydraulicLever := #testResult;
+END_FUNCTION
+

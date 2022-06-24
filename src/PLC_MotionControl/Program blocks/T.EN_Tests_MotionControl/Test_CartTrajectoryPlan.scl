@@ -1,0 +1,144 @@
+﻿FUNCTION_BLOCK "Test_CartTrajectoryPlan"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_OUTPUT 
+      testResult : Bool;
+   END_VAR
+
+   VAR 
+      InstCartTrajectoryPlan { S7_SetPoint := 'False'} : "CartTrajectoryPlan";
+   END_VAR
+
+   VAR_TEMP 
+      setSpeeds : Array[1..3] of Real;
+      armPos : Array[1..3] of Real;
+      motionControlParam : "typeMotionControlParam";
+      enable : Bool;
+      timeCycle : Real;
+      sat : Bool;
+      setPos : Array[1..3] of Real;
+      setPosRef : Array[1..3] of Real;
+   END_VAR
+
+
+BEGIN
+	#setSpeeds[1] := 1.0;
+	#setSpeeds[2] := -1.0;
+	#setSpeeds[3] := 0.5;
+	#armPos[1] := 1.0;
+	#armPos[2] := 2.0;
+	#armPos[3] := -3.0;
+	#motionControlParam.satParam.deltaSatGainNeg := 0.1;
+	#motionControlParam.satParam.deltaSatGainPos := 0.01;
+	#motionControlParam.cartSpeedGains[1] := 0.15;
+	#motionControlParam.cartSpeedGains[2] := 0.1;
+	#motionControlParam.cartSpeedGains[3] := 0.05;
+	#enable := FALSE;
+	#timeCycle := 2;
+	#sat := FALSE;
+	
+	(* First call with enable = FALSE *)
+	#InstCartTrajectoryPlan(armPos := #armPos,
+	                        setSpeeds := #setSpeeds,
+	                        enable := #enable,
+	                        timeCycle := #timeCycle,
+	                        sat := #sat,
+	                        motionControlParam := #motionControlParam,
+	                        setPos => #setPos);
+	
+	#testResult := "Test_RealAxisError"(value := #setPos,
+	                                    reference := #armPos,
+	                                    errorType := 'abs',
+	                                    tol := 1.0e-4);
+	
+	(* First call with enable = TRUE and sat = FALSE *)
+	#enable := TRUE;
+	#InstCartTrajectoryPlan(armPos := #armPos,
+	                        setSpeeds := #setSpeeds,
+	                        enable := #enable,
+	                        timeCycle := #timeCycle,
+	                        sat := #sat,
+	                        motionControlParam := #motionControlParam,
+	                        setPos => #setPos);
+	
+	#setPosRef[1] := 1.0 + 1.0 * 0.15 * 2 * 1.0;
+	#setPosRef[2] := 2.0 - 1.0 * 0.1 * 2 * 1.0;
+	#setPosRef[3] := -3.0 + 0.5 * 0.05 * 2 * 1.0;
+	
+	#testResult := #testResult AND "Test_RealAxisError"(value := #setPos,
+	                                                    reference := #setPosRef,
+	                                                    errorType := 'abs',
+	                                                    tol := 1.0e-4);
+	
+	(* Second call with enable = TRUE and sat = FALSE *)
+	#InstCartTrajectoryPlan(armPos := #armPos,
+	                        setSpeeds := #setSpeeds,
+	                        enable := #enable,
+	                        timeCycle := #timeCycle,
+	                        sat := #sat,
+	                        motionControlParam := #motionControlParam,
+	                        setPos => #setPos);
+	
+	#setPosRef[1] := 1.0 + 1.0 * 0.15 * 2 * 1.0 + 1.0 * 0.15 * 2 * 1.0;
+	#setPosRef[2] := 2.0 - 1.0 * 0.1 * 2 * 1.0 - 1.0 * 0.1 * 2 * 1.0;
+	#setPosRef[3] := -3.0 + 0.5 * 0.05 * 2 * 1.0 + 0.5 * 0.05 * 2 * 1.0;
+	
+	#testResult := #testResult AND "Test_RealAxisError"(value := #setPos,
+	                                                    reference := #setPosRef,
+	                                                    errorType := 'abs',
+	                                                    tol := 1.0e-4);
+	
+	(* Third call with enable = TRUE and sat = TRUE *)
+	#sat := TRUE;
+	#InstCartTrajectoryPlan(armPos := #armPos,
+	                        setSpeeds := #setSpeeds,
+	                        enable := #enable,
+	                        timeCycle := #timeCycle,
+	                        sat := #sat,
+	                        motionControlParam := #motionControlParam,
+	                        setPos => #setPos);
+	
+	#setPosRef[1] := 1.0 + 1.0 * 0.15 * 2 * 1.0 + 1.0 * 0.15 * 2 * 1.0 + 1.0 * 0.15 * 2 * 0.9;
+	#setPosRef[2] := 2.0 - 1.0 * 0.1 * 2 * 1.0 - 1.0 * 0.1 * 2 * 1.0 - 1.0 * 0.1 * 2 * 0.9;
+	#setPosRef[3] := -3.0 + 0.5 * 0.05 * 2 * 1.0 + 0.5 * 0.05 * 2 * 1.0 + 0.5 * 0.05 * 2 * 0.9;
+	
+	#testResult := #testResult AND "Test_RealAxisError"(value := #setPos,
+	                                                    reference := #setPosRef,
+	                                                    errorType := 'abs',
+	                                                    tol := 1.0e-4);
+	
+	(* Fourth call with enable = TRUE and sat = False *)
+	#sat := FALSE;
+	#InstCartTrajectoryPlan(armPos := #armPos,
+	                        setSpeeds := #setSpeeds,
+	                        enable := #enable,
+	                        timeCycle := #timeCycle,
+	                        sat := #sat,
+	                        motionControlParam := #motionControlParam,
+	                        setPos => #setPos);
+	
+	#setPosRef[1] := 1.0 + 1.0 * 0.15 * 2 * 1.0 + 1.0 * 0.15 * 2 * 1.0 + 1.0 * 0.15 * 2 * 0.9 + 1.0 * 0.15 * 2 * 0.91;
+	#setPosRef[2] := 2.0 - 1.0 * 0.1 * 2 * 1.0 - 1.0 * 0.1 * 2 * 1.0 - 1.0 * 0.1 * 2 * 0.9 - 1.0 * 0.1 * 2 * 0.91;
+	#setPosRef[3] := -3.0 + 0.5 * 0.05 * 2 * 1.0 + 0.5 * 0.05 * 2 * 1.0 + 0.5 * 0.05 * 2 * 0.9 + 0.5 * 0.05 * 2 * 0.91;
+	
+	#testResult := #testResult AND "Test_RealAxisError"(value := #setPos,
+	                                                    reference := #setPosRef,
+	                                                    errorType := 'abs',
+	                                                    tol := 1.0e-4);
+	
+	(* Last call with enable = FALSE and sat = TRUE *)
+	#enable := FALSE;
+	#InstCartTrajectoryPlan(armPos := #armPos,
+	                        setSpeeds := #setSpeeds,
+	                        enable := #enable,
+	                        timeCycle := #timeCycle,
+	                        sat := #sat,
+	                        motionControlParam := #motionControlParam,
+	                        setPos => #setPos);
+	
+	#testResult := #testResult AND "Test_RealAxisError"(value := #setPos,
+	                                                    reference := #armPos,
+	                                                    errorType := 'abs',
+	                                                    tol := 1.0e-4);
+END_FUNCTION_BLOCK
+

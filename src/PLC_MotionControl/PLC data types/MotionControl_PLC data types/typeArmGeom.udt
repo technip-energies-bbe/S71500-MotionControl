@@ -1,0 +1,20 @@
+﻿TYPE "typeArmGeom"
+VERSION : 0.1
+   STRUCT
+      st80Depth : Real;
+      st80Offset : Real;
+      st80Height : Real;
+      st80Width : Real;
+      st40Width : Real;
+      st50Width : Real;
+      outLength : Real;
+      inLength : Real;
+      brHeight : Real;
+      st50Offset : Real;
+      st80OffsetBis : Real;
+      brWidth : Real;
+      st80TiltOffset : Real;
+   END_STRUCT;
+
+END_TYPE
+

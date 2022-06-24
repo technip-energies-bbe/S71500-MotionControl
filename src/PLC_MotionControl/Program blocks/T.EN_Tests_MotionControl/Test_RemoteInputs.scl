@@ -1,0 +1,192 @@
+﻿FUNCTION_BLOCK "Test_RemoteInputs"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_OUTPUT 
+      testResult : Bool;
+   END_VAR
+
+   VAR 
+      InstRemoteInputs : "RemoteInputs";
+   END_VAR
+
+   VAR_TEMP 
+      easyDriveOn : Bool;
+      inputs : Array[1..3] of Real;
+      motionControlParam : "typeMotionControlParam";
+      status : "typeMoveStatus";
+      outputs : Array[1..3] of Real;
+      outputsRef : Array[1..3] of Real;
+      statusRef : "typeMoveStatus";
+      enable : Bool;
+      timeCycle : Real;
+      timeConstant : Real;
+   END_VAR
+
+
+BEGIN
+	(* First case check signal transmission from inputs to outputs*)
+	#easyDriveOn := False;
+	#motionControlParam.remoteInputParam.convScalingParams[1].a := 1.0;
+	#motionControlParam.remoteInputParam.convScalingParams[1].b := 0.0;
+	#motionControlParam.remoteInputParam.convScalingParams[1].axisNum := 1;
+	#motionControlParam.remoteInputParam.convScalingParams[2].a := 1.0;
+	#motionControlParam.remoteInputParam.convScalingParams[2].b := 0.0;
+	#motionControlParam.remoteInputParam.convScalingParams[2].axisNum := 2;
+	#motionControlParam.remoteInputParam.convScalingParams[3].a := 1.0;
+	#motionControlParam.remoteInputParam.convScalingParams[3].b := 0.0;
+	#motionControlParam.remoteInputParam.convScalingParams[3].axisNum := 3;
+	#motionControlParam.remoteInputParam.easyScalingParams[1].a := 1.0;
+	#motionControlParam.remoteInputParam.easyScalingParams[1].b := 0.0;
+	#motionControlParam.remoteInputParam.easyScalingParams[1].axisNum := 1;
+	#motionControlParam.remoteInputParam.easyScalingParams[2].a := 1.0;
+	#motionControlParam.remoteInputParam.easyScalingParams[2].b := 0.0;
+	#motionControlParam.remoteInputParam.easyScalingParams[2].axisNum := 2;
+	#motionControlParam.remoteInputParam.easyScalingParams[3].a := 1.0;
+	#motionControlParam.remoteInputParam.easyScalingParams[3].b := 0.0;
+	#motionControlParam.remoteInputParam.easyScalingParams[3].axisNum := 3;
+	#motionControlParam.minSpeed := 0.01;
+	#inputs[1] := 1.0;
+	#inputs[2] := 0.5;
+	#inputs[3] := -0.3;
+	#timeCycle := 1.0;
+	#timeConstant := 1.0;
+	#enable := False;
+	
+	(* Conventionnal mode with remote inputs on all axis *)
+	#InstRemoteInputs(easyDriveOn := #easyDriveOn,
+	                  enable := #enable,
+	                  inputs := #inputs,
+	                  timeCycle := #timeCycle,
+	                  motionControlParam := #motionControlParam,
+	                  outputs => #outputs,
+	                  status => #status);
+	
+	#testResult := "Test_RealAxisError"(value := #outputs, reference := #inputs, errorType := 'abs', tol := 1.0e-3);
+	
+	IF #status.global = True THEN
+	    #testResult := #testResult AND TRUE;
+	ELSE
+	    #testResult := False;
+	END_IF;
+	
+	(* Cartesian mode with remote inputs on all axis *)
+	#easyDriveOn := True;
+	#InstRemoteInputs(easyDriveOn := #easyDriveOn,
+	                  enable := #enable,
+	                  inputs := #inputs,
+	                  timeCycle := #timeCycle,
+	                  motionControlParam := #motionControlParam,
+	                  outputs => #outputs,
+	                  status => #status);
+	
+	#testResult := #testResult AND "Test_RealAxisError"(value := #outputs, reference := #inputs, errorType := 'abs', tol := 1.0e-3);
+	
+	IF #status.global = True THEN
+	    #testResult := #testResult AND TRUE;
+	ELSE
+	    #testResult := False;
+	END_IF;
+	
+	(* Cartesian mode with no inputs on all axis *)
+	#inputs[1] := 0.0;
+	#inputs[2] := 0.0;
+	#inputs[3] := 0.0;
+	
+	#InstRemoteInputs(easyDriveOn := #easyDriveOn,
+	                  enable := #enable,
+	                  inputs := #inputs,
+	                  timeCycle := #timeCycle,
+	                  motionControlParam := #motionControlParam,
+	                  outputs => #outputs,
+	                  status => #status);
+	
+	#testResult := #testResult AND "Test_RealAxisError"(value := #outputs, reference := #inputs, errorType := 'abs', tol := 1.0e-3);
+	
+	IF #status.global = False THEN
+	    #testResult := #testResult AND TRUE;
+	ELSE
+	    #testResult := False;
+	END_IF;
+	
+	(* Cartesian mode with no inputs on first axis *)
+	#inputs[1] := 1.0;
+	#inputs[2] := 0.0;
+	#inputs[3] := 0.0;
+	
+	#InstRemoteInputs(easyDriveOn := #easyDriveOn,
+	                  enable := #enable,
+	                  inputs := #inputs,
+	                  timeCycle := #timeCycle,
+	                  motionControlParam := #motionControlParam,
+	                  outputs => #outputs,
+	                  status => #status);
+	
+	#testResult := #testResult AND "Test_RealAxisError"(value := #outputs, reference := #inputs, errorType := 'abs', tol := 1.0e-3);
+	
+	IF #status.global = True THEN
+	    #testResult := #testResult AND TRUE;
+	ELSE
+	    #testResult := False;
+	END_IF;
+	
+	IF #status.axis[1] = True AND #status.axis[2] = False AND #status.axis[3] = False THEN
+	    #testResult := #testResult AND TRUE;
+	ELSE
+	    #testResult := False;
+	END_IF;
+	
+	(* Cartesian mode with no inputs on second axis *)
+	#inputs[1] := 0.0;
+	#inputs[2] := 1.0;
+	#inputs[3] := 0.0;
+	
+	#InstRemoteInputs(easyDriveOn := #easyDriveOn,
+	                  enable := #enable,
+	                  inputs := #inputs,
+	                  timeCycle := #timeCycle,
+	                  motionControlParam := #motionControlParam,
+	                  outputs => #outputs,
+	                  status => #status);
+	
+	#testResult := #testResult AND "Test_RealAxisError"(value := #outputs, reference := #inputs, errorType := 'abs', tol := 1.0e-3);
+	
+	IF #status.global = True THEN
+	    #testResult := #testResult AND TRUE;
+	ELSE
+	    #testResult := False;
+	END_IF;
+	
+	IF #status.axis[1] = False AND #status.axis[2] = True AND #status.axis[3] = False THEN
+	    #testResult := #testResult AND TRUE;
+	ELSE
+	    #testResult := False;
+	END_IF;
+	
+	(* Cartesian mode with no inputs on third axis *)
+	#inputs[1] := 0.0;
+	#inputs[2] := 0.0;
+	#inputs[3] := 1.0;
+	
+	#InstRemoteInputs(easyDriveOn := #easyDriveOn,
+	                  enable := #enable,
+	                  inputs := #inputs,
+	                  timeCycle := #timeCycle,
+	                  motionControlParam := #motionControlParam,
+	                  outputs => #outputs,
+	                  status => #status);
+	
+	#testResult := #testResult AND "Test_RealAxisError"(value := #outputs, reference := #inputs, errorType := 'abs', tol := 1.0e-3);
+	
+	IF #status.global = True THEN
+	    #testResult := #testResult AND TRUE;
+	ELSE
+	    #testResult := False;
+	END_IF;
+	
+	IF #status.axis[1] = False AND #status.axis[2] = False AND #status.axis[3] = True THEN
+	    #testResult := #testResult AND TRUE;
+	ELSE
+	    #testResult := False;
+	END_IF;
+END_FUNCTION_BLOCK
+

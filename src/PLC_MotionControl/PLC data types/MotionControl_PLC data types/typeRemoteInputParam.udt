@@ -1,0 +1,10 @@
+﻿TYPE "typeRemoteInputParam"
+VERSION : 0.1
+   STRUCT
+      easyScalingParams { S7_SetPoint := 'False'} : Array[1.."AXIS_NUM"] of "typeScaleParam";
+      convScalingParams : Array[1.."AXIS_NUM"] of "typeScaleParam";
+      filterTimeConsts : Array[1.."AXIS_NUM"] of Real;
+   END_STRUCT;
+
+END_TYPE
+

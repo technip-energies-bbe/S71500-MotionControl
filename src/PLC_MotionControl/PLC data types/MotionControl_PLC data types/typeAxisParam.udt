@@ -1,0 +1,24 @@
+﻿TYPE "typeAxisParam"
+VERSION : 0.1
+   STRUCT
+      axisType : String;
+      cylinderType : String;
+      cylinderDir : Real;
+      pistonDiam : Real;
+      rodDiam : Real;
+      stroke : Real;
+      rodPivotPos : Array[1..2] of Real;
+      bodyPivotPos : Array[1..2] of Real;
+      movingCylinder : Bool;
+      angleOffset : Real;
+      presDrop : Real;
+      nomFlow : Real;
+      setpointJump : Real;
+      setpointMin : Real;
+      sheaveDiam : Real;
+      naturalFrequency : Real;
+      damping : Real;
+   END_STRUCT;
+
+END_TYPE
+

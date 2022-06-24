@@ -1,0 +1,14 @@
+﻿TYPE "typeRegulParam"
+VERSION : 0.1
+   STRUCT
+      fOn : Real;
+      pOn : Real;
+      iOn : Real;
+      dOn : Real;
+      kP : Real;
+      tI : Real;
+      tD : Real;
+   END_STRUCT;
+
+END_TYPE
+

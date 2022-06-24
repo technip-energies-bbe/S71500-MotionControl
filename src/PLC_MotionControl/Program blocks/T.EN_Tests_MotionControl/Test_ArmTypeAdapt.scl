@@ -1,0 +1,46 @@
+﻿FUNCTION "Test_ArmTypeAdapt" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      setpointCart : Array[1..3] of Real;
+      adaptSetpointCart : Array[1..3] of Real;
+      adaptSetpointCartRef : Array[1..3] of Real;
+      armParam : "typeArmParam";
+      testResult : Bool;
+   END_VAR
+
+
+BEGIN
+	#setpointCart[1] := 11;
+	#setpointCart[2] := 7;
+	#setpointCart[3] := 5;
+	
+	(* First test : DCMA case *)
+	#armParam.armType := 'DCMA';
+	#adaptSetpointCartRef[1] := 11;
+	#adaptSetpointCartRef[2] := 7;
+	#adaptSetpointCartRef[3] := 5;
+	"ArmTypeAdapt"(armParam := #armParam,
+	               setpointCart := #setpointCart,
+	               adaptSetpointCart => #adaptSetpointCart);
+	#testResult := "Test_RealAxisError"(errorType := 'abs',
+	                                    tol := 1.0e-3,
+	                                    value := #adaptSetpointCart,
+	                                    reference := #adaptSetpointCartRef);
+	
+	(* Second test : RCMA case *)
+	#armParam.armType := 'RCMA';
+	#adaptSetpointCartRef[1] := 11;
+	#adaptSetpointCartRef[2] := 7;
+	#adaptSetpointCartRef[3] := -2;
+	"ArmTypeAdapt"(armParam := #armParam,
+	               setpointCart := #setpointCart,
+	               adaptSetpointCart => #adaptSetpointCart);
+	#testResult := #testResult & "Test_RealAxisError"(errorType := 'abs',
+	                                                  tol := 1.0e-3,
+	                                                  value := #adaptSetpointCart,
+	                                                  reference := #adaptSetpointCartRef);
+	
+	#Test_ArmTypeAdapt := #testResult;
+END_FUNCTION
+

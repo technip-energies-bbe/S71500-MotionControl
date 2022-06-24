@@ -1,0 +1,25 @@
+﻿FUNCTION "Test_HydraulicFlow" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      axisParam : "typeAxisParam";
+      nomFlow : Real;
+      nomFlowRef : Real;
+   END_VAR
+
+
+BEGIN
+	(* Parameters *)
+	#axisParam.nomFlow := 20.0;
+	#axisParam.presDrop := 10.0e5;
+	#nomFlowRef := 28.2843;
+	(* HydraulicFlow call *)
+	#nomFlow := "HydraulicFlow"(axisParam := #axisParam);
+	(* Test *)
+	#Test_HydraulicFlow := "Test_RealError"(errorType := 'abs',
+	                                        tol := 1.0e-3,
+	                                        reference := #nomFlowRef,
+	                                        value := #nomFlow);
+	
+END_FUNCTION
+

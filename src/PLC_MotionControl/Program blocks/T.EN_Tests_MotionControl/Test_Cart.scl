@@ -1,0 +1,83 @@
+﻿FUNCTION_BLOCK "Test_Cart"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR 
+      InstMotionControl { S7_SetPoint := 'False'} : "MotionControl";
+      InstTest_ArmModel : "Test_ArmModel";
+      testCount { S7_SetPoint := 'True'} : Real;
+      angleSensors : Array[1.."AXIS_NUM"] of Real;
+      setpoints { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      propSetpoints { ExternalAccessible := 'False'; ExternalVisible := 'False'; ExternalWritable := 'False'} : Array[1.."AXIS_NUM"] of Real;
+      cartPos : Array[1.."AXIS_NUM"] of Real;
+   END_VAR
+
+   VAR_TEMP 
+      armParam : "typeArmParam";
+      timeCycle : Real;
+      easyDriveOn : Bool;
+      motionControlEnable : Bool;
+   END_VAR
+
+   VAR CONSTANT 
+      TESTS_NUM : Int := 100;
+   END_VAR
+
+
+BEGIN
+	#easyDriveOn := True;
+	#motionControlEnable := True;
+	#timeCycle := 0.05;
+	
+	IF #testCount = 0 THEN
+	    #setpoints[1] := 0.0;
+	    #setpoints[2] := -1.0;
+	    #setpoints[3] := 0.0;
+	    
+	    #InstMotionControl(easyDriveOn := #easyDriveOn,
+	                       motionControlEnable := False,
+	                       setpoints := #setpoints,
+	                       angleSensors := #angleSensors,
+	                       timeCycle := #timeCycle,
+	                       armParam := "projectParam".armParams[1],
+	                       finalSetpointProps => #propSetpoints);
+	END_IF;
+	
+	IF #testCount = 1000 THEN
+	    #setpoints[1] := 0.0;
+	    #setpoints[2] := 1.0;
+	    #setpoints[3] := 0.0;
+	    
+	    #InstMotionControl(easyDriveOn := #easyDriveOn,
+	                       motionControlEnable := False,
+	                       setpoints := #setpoints,
+	                       angleSensors := #angleSensors,
+	                       timeCycle := #timeCycle,
+	                       armParam := "projectParam".armParams[1],
+	                       finalSetpointProps => #propSetpoints);
+	END_IF;
+	
+	
+	#InstMotionControl(easyDriveOn := #easyDriveOn,
+	                   motionControlEnable := #motionControlEnable,
+	                   setpoints := #setpoints,
+	                   angleSensors := #angleSensors,
+	                   timeCycle := #timeCycle,
+	                   armParam := "projectParam".armParams[1],
+	                   finalSetpointProps => #propSetpoints);
+	
+	#InstTest_ArmModel(armParam := "projectParam".armParams[1],
+	                   setpoints := #propSetpoints,
+	                   timeCycle := #timeCycle,
+	                   angles => #angleSensors);
+	
+	"ForwardKinematicSimple"(angles := #angleSensors,
+	                         armGeom := "projectParam".armParams[1].armGeom,
+	                         pos => #cartPos);
+	
+	#testCount := #testCount + 1;
+	
+	IF #testCount = 2000 THEN
+	    #testCount := 0;
+	END_IF;
+END_FUNCTION_BLOCK
+

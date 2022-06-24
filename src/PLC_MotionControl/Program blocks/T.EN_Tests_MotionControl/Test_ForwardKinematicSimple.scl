@@ -1,0 +1,61 @@
+﻿FUNCTION "Test_ForwardKinematicSimple" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      armGeom : "typeArmGeom";
+      angle : Array[1..3] of Real;
+      pos : Array[1..3] of Real;
+      refPos : Array[1..3] of Real;
+      errorRes : Bool;
+   END_VAR
+
+
+BEGIN
+	
+	(* First case *)
+	#armGeom.brHeight := 9.22;
+	#armGeom.inLength := 9.449;
+	#armGeom.outLength := 10.363;
+	#angle[1] := 0.0;
+	#angle[2] := 0.0;
+	#angle[3] := 0.0;
+	#refPos[1] := 0.0;
+	#refPos[2] := -9.449;
+	#refPos[3] := -1.143;
+	
+	"ForwardKinematicSimple"(angles := #angle,
+	                         armGeom := #armGeom,
+	                         pos => #pos);
+	
+	#errorRes := "Test_RealAxisError"(value := #pos,
+	                                  reference := #refPos,
+	                                  tol := 0.0001,
+	                                  errorType := 'abs');
+	
+	(* Second case *)
+	#armGeom.brHeight := 9.22;
+	#armGeom.inLength := 9.449;
+	#armGeom.outLength := 10.363;
+	#angle[1] := 0.34906;
+	#angle[2] := 0.174532;
+	#angle[3] := -0.785398;
+	#refPos[1] := 0.67641;
+	#refPos[2] := -1.85843;
+	#refPos[3] := 3.53305;
+	
+	"ForwardKinematicSimple"(angles := #angle,
+	                         armGeom := #armGeom,
+	                         pos => #pos);
+	
+	#errorRes := "Test_RealAxisError"(value := #pos,
+	                                  reference := #refPos,
+	                                  tol := 0.0001,
+	                                  errorType := 'abs')
+	& #errorRes;
+	
+	#Test_ForwardKinematicSimple := #errorRes;
+	
+	
+	
+END_FUNCTION
+
