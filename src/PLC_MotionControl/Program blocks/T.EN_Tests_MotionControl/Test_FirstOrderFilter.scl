@@ -1,0 +1,108 @@
+﻿FUNCTION_BLOCK "Test_FirstOrderFilter"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_OUTPUT 
+      testResult : Bool;
+   END_VAR
+
+   VAR 
+      InstFirstOrderFilter : "FirstOrderFilter";
+   END_VAR
+
+   VAR_TEMP 
+      input : Array[1.."TEST_VECTOR_NUM"] of Real;
+      output : Array[1.."TEST_VECTOR_NUM"] of Real;
+      reference : Array[1.."TEST_VECTOR_NUM"] of Real;
+      timeConstant : Real;
+      timeCycle : Real;
+      count : Int;
+   END_VAR
+
+
+BEGIN
+	
+	(* Inputs definition for test case *)
+	#timeConstant := 3;
+	#timeCycle := 1;
+	FOR #count := 1 TO "TEST_VECTOR_NUM" DO
+	    #input[#count] := 1.0;
+	END_FOR;
+	#reference[1] := 0.25;
+	#reference[2] := 0.4375;
+	#reference[3] := 0.578125;
+	#reference[4] := 0.683594;
+	#reference[5] := 0.762695;
+	#reference[6] := 0.822021;
+	#reference[7] := 0.866516;
+	#reference[8] := 0.899887;
+	#reference[9] := 0.924915;
+	#reference[10] := 0.943686;
+	
+	(* First condition : when cond = FALSE the output = input *)
+	#InstFirstOrderFilter(enable := FALSE,
+	                      input := 10.0,
+	                      timeConstant := #timeConstant,
+	                      timeCycle := #timeCycle,
+	                      output => #output[1]);
+	
+	IF "Test_RealError"(errorType := 'abs',
+	                        reference := 10.0,
+	                        tol := 1.0e-5,
+	                        value := #output[1]) THEN
+	    #testResult := TRUE;
+	ELSE
+	    #testResult := FALSE;
+	END_IF;
+	
+	(* Reinitialize the FirstOrderFilter *)
+	#InstFirstOrderFilter(enable := FALSE,
+	                      input := 0.0,
+	                      timeConstant := #timeConstant,
+	                      timeCycle := #timeCycle,
+	                      output => #output[1]);
+	
+	IF "Test_RealError"(errorType := 'abs',
+	                        reference := 0.0,
+	                        tol := 1.0e-5,
+	                        value := #output[1]) THEN
+	    #testResult := #testResult & TRUE;
+	ELSE
+	    #testResult := FALSE;
+	END_IF;
+	
+	(* Loop to simulate dynamic behaviour during TEST_VECTOR_NUM steps *)
+	FOR #count := 1 TO "TEST_VECTOR_NUM" DO
+	    #InstFirstOrderFilter(enable := TRUE,
+	                          input := #input[#count],
+	                          timeConstant := #timeConstant,
+	                          timeCycle := #timeCycle,
+	                          output => #output[#count]);
+	END_FOR;
+	
+	IF "Test_RealVectorError"(errorType := 'abs',
+	                              reference := #reference,
+	                              tol := 1.0e-5,
+	                              value := #output) THEN
+	    #testResult := #testResult & TRUE;
+	ELSE
+	    #testResult := FALSE;
+	END_IF;
+	
+	(* Last condition : when cond = FALSE the output = 0.0 *)
+	#InstFirstOrderFilter(enable := FALSE,
+	                      input := 10.0,
+	                      timeConstant := #timeConstant,
+	                      timeCycle := #timeCycle,
+	                      output => #output[1]);
+	
+	IF "Test_RealError"(errorType := 'abs',
+	                        reference := 10.0,
+	                        tol := 1.0e-5,
+	                        value := #output[1]) THEN
+	    #testResult := #testResult & TRUE;
+	ELSE
+	    #testResult := FALSE;
+	END_IF;
+	
+END_FUNCTION_BLOCK
+

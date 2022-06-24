@@ -1,0 +1,30 @@
+﻿FUNCTION "Test_Deadband" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      input : Real;
+      deadbandValue : Real;
+   END_VAR
+
+   VAR_OUTPUT 
+      output : Real;
+   END_VAR
+
+   VAR_TEMP 
+      a : Real;
+      b : Real;
+   END_VAR
+
+
+BEGIN
+	#a := 1 / (1.0 - #deadbandValue);
+	#b := - #deadbandValue / (1 - #deadbandValue);
+	IF #input > #deadbandValue THEN
+	    #output := #a * #input + #b;
+	ELSIF #input < - #deadbandValue THEN
+	    #output := #a * #input - #b;
+	ELSE
+	    #output := 0.0;
+	END_IF;
+END_FUNCTION
+

@@ -1,0 +1,32 @@
+﻿FUNCTION "Test_RealAxisError" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      value : Array[1.."AXIS_NUM"] of Real;
+      reference : Array[1.."AXIS_NUM"] of Real;
+      tol : Real;
+      errorType : String;
+   END_VAR
+
+   VAR_TEMP 
+      errorRes : Bool;
+      axisCounter : Int;
+   END_VAR
+
+
+BEGIN
+	
+	#errorRes := TRUE;
+	
+	FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	    #errorRes := "Test_RealError"(value := #value[#axisCounter],
+	                                  reference := #reference[#axisCounter],
+	                                  tol := #tol,
+	                                  errorType := #errorType)
+	    AND #errorRes;
+	END_FOR;
+	
+	#Test_RealAxisError := #errorRes;
+	
+END_FUNCTION
+

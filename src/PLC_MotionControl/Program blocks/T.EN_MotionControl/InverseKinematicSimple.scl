@@ -1,0 +1,120 @@
+﻿FUNCTION "InverseKinematicSimple" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      armGeom : "typeArmGeom";
+      pos : Array[1..3] of Real;
+   END_VAR
+
+   VAR_OUTPUT 
+      angles : Array[1..3] of Real;
+   END_VAR
+
+   VAR_TEMP 
+      F : Real;
+      G : Real;
+      H : Real;
+      x : Real;
+      y : Real;
+      z : Real;
+      X1 : Real;
+      X2 : Real;
+      X3 : Real;
+      X4 : Real;
+      X5 : Real;
+      X6 : Real;
+      X7 : Real;
+      X8 : Real;
+      X9 : Real;
+      X10 : Real;
+      SIN1 : Real;
+      COS1 : Real;
+      SIN2 : Real;
+      COS2 : Real;
+      phi1 : Real;
+      phi2 : Real;
+      alpha1 : Real;
+      alpha2 : Real;
+      beta1 : Real;
+      beta2 : Real;
+   END_VAR
+
+   VAR CONSTANT 
+      PI : Real := 3.141593;
+   END_VAR
+
+
+BEGIN
+	
+	(* Simple inverse kinematic of the rotation n°4 *)
+	
+	(* Parameters retrieval *)
+	#F := #armGeom.outLength;
+	#G := #armGeom.inLength;
+	#H := #armGeom.brHeight;
+	#x := #pos[1];
+	#y := #pos[2];
+	#z := #pos[3];
+	
+	(* Main calculation *)
+	#X1 := #x;
+	#X2 := #y;
+	#X4 := #z - #H;
+	#X6 := 2.0 * #G * #X4;
+	
+	(* Condition on y axis *)
+	IF #y < 0.0 THEN
+	    #X3 := SQRT(#X1 * #X1 + #X2 * #X2);
+	    #X5 := 2.0 * #G * #X3;
+	    #X7 := #X3 * #X3 + #X4 * #X4 + #G * #G - #F * #F;
+	ELSE
+	    #X3 := - SQRT(#X1 * #X1 + #X2 * #X2);
+	    #X5 := 2.0 * #G * #X3;
+	    #X7 := #X3 * #X3 + #X4 * #X4 + #G * #G - #F * #F;
+	END_IF;
+	
+	(* Prevent negative square root during alpha calculation *)
+	#X10 := #X5 * #X5 + #X6 * #X6 - #X7 * #X7;
+	IF #X10 < 0.0 THEN
+	    #X10 := 0.0;
+	END_IF;
+	
+	(* Angle alpha calculation (inboard) *)
+	#SIN1 := (#X6 * #X7 + #X5 * SQRT(#X10)) / (#X5 * #X5 + #X6 * #X6);
+	#SIN2 := (#X6 * #X7 - #X5 * SQRT(#X10)) / (#X5 * #X5 + #X6 * #X6);
+	#COS1 := (#X5 * #X7 - #X6 * SQRT(#X10)) / (#X5 * #X5 + #X6 * #X6);
+	#COS2 := (#X5 * #X7 + #X6 * SQRT(#X10)) / (#X5 * #X5 + #X6 * #X6);
+	#alpha1 := "Atan2"("y" := #SIN1, "x" := #COS1);
+	#alpha2 := "Atan2"(y := #SIN2, x := #COS2);
+	
+	(* Angle beta calculation (outboard) *)
+	#SIN1 := (#X3 - #G * COS(#alpha1)) / #F;
+	#COS1 := - (#X4 - #G * SIN(#alpha1)) / #F;
+	#beta1 := "Atan2"(y := #SIN1, x := #COS1);
+	#SIN2 := (#X3 - #G * COS(#alpha1)) / #F;
+	#COS2 := - (#X4 - #G * SIN(#alpha1)) / #F;
+	#beta2 := "Atan2"(y := #SIN2, x := #COS2);
+	
+	(* Angle phi calculation (Slewing) *)
+	#X9 := #F * SIN(#beta1) + #G * COS(#alpha1);
+	#SIN1 := #X1 / #X9;
+	#COS1 := - #X2 / #X9;
+	#phi1 := "Atan2"(y := #SIN1, x := #COS1);
+	#X9 := #F * SIN(#beta2) + #G * COS(#alpha2);
+	#SIN2 := #X1 / #X9;
+	#COS2 := - #X2 / #X9;
+	#phi2 := "Atan2"(y := #SIN2, x := #COS2);
+	
+	(* Angle choices *)
+	IF (ABS(#phi1) > #PI / 2.0) OR (ABS(#alpha1) > #PI / 2.0) OR (ABS(#beta1) > #PI / 2.0) THEN
+	    #angles[1] := #phi2;
+	    #angles[2] := #alpha2;
+	    #angles[3] := #beta2;
+	ELSE
+	    #angles[1] := #phi1;
+	    #angles[2] := #alpha1;
+	    #angles[3] := #beta1;
+	END_IF;
+	
+END_FUNCTION
+

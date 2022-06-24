@@ -1,0 +1,22 @@
+﻿FUNCTION "Test_CpmsUnscaling" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      inputs : Array[1..3] of Real;
+   END_VAR
+
+   VAR_OUTPUT 
+      outputs : Array[1..3] of Int;
+   END_VAR
+
+   VAR CONSTANT 
+      PI : Real := 3.141593;
+   END_VAR
+
+
+BEGIN
+	#outputs[1] := REAL_TO_INT(55296.0 / #PI * #inputs[1] + 13824.0);
+	#outputs[2] := REAL_TO_INT(-27648.0 / #PI * #inputs[2] + 20736.0);
+	#outputs[3] := REAL_TO_INT(27648.0 / #PI * #inputs[3] - 27648.0 * (75.0 / 180.0 - 0.5));
+END_FUNCTION
+

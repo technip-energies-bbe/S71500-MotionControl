@@ -1,0 +1,61 @@
+﻿FUNCTION_BLOCK "Test_ArmModel"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      setpoints : Array[1.."AXIS_NUM"] of Real;
+      armParam : "typeArmParam";
+      timeCycle : Real;
+   END_VAR
+
+   VAR_OUTPUT 
+      angles : Array[1.."AXIS_NUM"] of Real;
+   END_VAR
+
+   VAR 
+      InstTest_SecondOrderAndIntegrators { S7_SetPoint := 'False'} : Array[1.."AXIS_NUM"] of "Test_SecondOrderAndIntegrator";
+      axisAngles { S7_SetPoint := 'True'} : Array[1.."AXIS_NUM"] of Real := [3(0.0)];
+   END_VAR
+
+   VAR_TEMP 
+      axisCounter : Int;
+      realSetpoints : Array[1.."AXIS_NUM"] of Real;
+      flows : Array[1.."AXIS_NUM"] of Real;
+      cylinderSpeeds : Array[1.."AXIS_NUM"] of Real;
+      angularSpeeds : Array[1.."AXIS_NUM"] of Real;
+   END_VAR
+
+
+BEGIN
+	FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	    (* Proportionnal valve DeadBand *)
+	    "Test_Deadband"(deadbandValue := #armParam.axisParams[#axisCounter].setpointJump,
+	                    input := #setpoints[#axisCounter],
+	                    output => #realSetpoints[#axisCounter]);
+	    
+	    (* Hydraulic gain *)
+	    #flows[#axisCounter] := "HydraulicFlow"(axisParam := #armParam.axisParams[#axisCounter]) * #realSetpoints[#axisCounter];
+	    
+	    (* Cylinder gain *)
+	    #cylinderSpeeds[#axisCounter] := #flows[#axisCounter] / "HydraulicLever"(axisParam := #armParam.axisParams[#axisCounter],
+	                                                                             axisSpeed := #setpoints[#axisCounter]);
+	    (* Mechanical gain *)
+	    #angularSpeeds[#axisCounter] := #cylinderSpeeds[#axisCounter] / "MechanicalLever"(axisParam := #armParam.axisParams[#axisCounter],
+	                                                                                      axisAngle := #axisAngles[#axisCounter]);
+	    
+	    (* Finally, application of the second order dynamic and integrator *)
+	    #InstTest_SecondOrderAndIntegrators[#axisCounter](input := #angularSpeeds[#axisCounter],
+	                                                      timeCycle := #timeCycle,
+	                                                      naturalFrequency := #armParam.axisParams[#axisCounter].naturalFrequency,
+	                                                      damping := #armParam.axisParams[#axisCounter].damping,
+	                                                      output => #axisAngles[#axisCounter]);
+	END_FOR;
+	
+	(* Adaptation for RCMA and DCMA *)
+	IF #armParam.armType = 'RCMA' THEN
+	    #axisAngles[3] := #axisAngles[3] + #axisAngles[2];
+	END_IF;
+	
+	#angles := #axisAngles;
+	
+END_FUNCTION_BLOCK
+

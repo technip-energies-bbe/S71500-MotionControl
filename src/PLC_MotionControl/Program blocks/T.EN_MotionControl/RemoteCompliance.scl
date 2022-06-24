@@ -1,0 +1,42 @@
+﻿FUNCTION "RemoteCompliance" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      easyDriveOn : Bool;
+      inputs : Array[1.."AXIS_NUM"] of Real;
+      easyScalingParams : Array[1.."AXIS_NUM"] of "typeScaleParam";
+      convScalingParams : Array[1.."AXIS_NUM"] of "typeScaleParam";
+   END_VAR
+
+   VAR_OUTPUT 
+      outputs : Array[1.."AXIS_NUM"] of Real;
+   END_VAR
+
+   VAR_TEMP 
+      axisCounter : Int;
+      scalingParam : "typeScaleParam";
+   END_VAR
+
+
+BEGIN
+	
+	(* Module used to adapt axis scaling and inversion of inputs depending
+	on the mode (conventionnal or easyDrive) *)
+	
+	IF #easyDriveOn THEN
+	    FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	        #scalingParam := #easyScalingParams[#axisCounter];
+	        #outputs[#axisCounter] := "Scaling"(input := #inputs[#scalingParam.axisNum],
+	                                            scaleParam := #scalingParam);
+	    END_FOR;
+	ELSE
+	    FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	        #scalingParam := #convScalingParams[#axisCounter];
+	        #outputs[#axisCounter] := "Scaling"(input := #inputs[#scalingParam.axisNum],
+	                                            scaleParam := #scalingParam);
+	    END_FOR;
+	    
+	END_IF;
+	
+END_FUNCTION
+

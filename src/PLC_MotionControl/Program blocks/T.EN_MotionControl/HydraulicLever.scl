@@ -1,0 +1,36 @@
+﻿FUNCTION "HydraulicLever" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      axisParam : "typeAxisParam";
+      axisSpeed : Real;
+   END_VAR
+
+   VAR_TEMP 
+      hydraulicSection : Real;
+      signCylinderDir : Real;
+   END_VAR
+
+   VAR CONSTANT 
+      PI : Real := 3.141593;
+   END_VAR
+
+
+BEGIN
+	(* Cylinder geometric gain calculation *)
+	IF #axisParam.cylinderType = 'sheave' OR #axisParam.axisType = 'double' OR #axisParam.cylinderType = 'sym' THEN
+	    #hydraulicSection := #PI / 4 * (#axisParam.pistonDiam ** 2 - #axisParam.rodDiam ** 2);
+	ELSE
+	    #signCylinderDir := #axisParam.cylinderDir / ABS(#axisParam.cylinderDir);
+	    IF #axisSpeed * #signCylinderDir > 0 THEN
+	        #hydraulicSection := #PI / 4 * #axisParam.pistonDiam ** 2;
+	    ELSE
+	        #hydraulicSection := #PI / 4 * (#axisParam.pistonDiam ** 2 - #axisParam.rodDiam ** 2);
+	    END_IF;
+	END_IF;
+	
+	#HydraulicLever := #hydraulicSection;
+	
+	
+END_FUNCTION
+

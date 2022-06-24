@@ -1,0 +1,82 @@
+﻿FUNCTION "Test_Atan2" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      x : Real;
+      y : Real;
+      value : Real;
+      reference : Real;
+      testResult : Bool;
+   END_VAR
+
+
+BEGIN
+	
+	(* First case *)
+	#x := 3.0;
+	#y := 10.0;
+	#value := "Atan2"(x := #x, y := #y);
+	#reference := 1.279339;
+	#testResult := "Test_RealError"(value := #value,
+	                                reference := #reference,
+	                                tol := 0.00001,
+	                                errorType := 'abs');
+	
+	(* Second case *)
+	#x := -2.0;
+	#y := 7.0;
+	#value := "Atan2"(x := #x, y := #y);
+	#reference := 1.849096;
+	#testResult := "Test_RealError"(value := #value,
+	                                reference := #reference,
+	                                tol := 0.00001,
+	                                errorType := 'abs')
+	& #testResult;
+	
+	(* Third case *)
+	#x := -2.5;
+	#y := -1;
+	#value := "Atan2"(x := #x, y := #y);
+	#reference := -2.761086;
+	#testResult := "Test_RealError"(value := #value,
+	                                reference := #reference,
+	                                tol := 0.00001,
+	                                errorType := 'abs')
+	& #testResult;
+	
+	(* Case n°4 *)
+	#x := 0.0;
+	#y := 12;
+	#value := "Atan2"(x := #x, y := #y);
+	#reference := 1.570796;
+	#testResult := "Test_RealError"(value := #value,
+	                                reference := #reference,
+	                                tol := 0.00001,
+	                                errorType := 'abs')
+	& #testResult;
+	
+	(* Case n°5 *)
+	#x := 0.0;
+	#y := -6;
+	#value := "Atan2"(x := #x, y := #y);
+	#reference := -1.570796;
+	#testResult := "Test_RealError"(value := #value,
+	                                reference := #reference,
+	                                tol := 1.0E-6,
+	                                errorType := 'abs')
+	& #testResult;
+	
+	(* Case n°6 *)
+	#x := 0.0;
+	#y := 0.0;
+	#value := "Atan2"(x := #x, y := #y);
+	#reference := 0.0;
+	#testResult := "Test_RealError"(value := #value,
+	                                reference := #reference,
+	                                tol := 0.00001,
+	                                errorType := 'abs')
+	& #testResult;
+	#Test_Atan2 := #testResult;
+	
+END_FUNCTION
+

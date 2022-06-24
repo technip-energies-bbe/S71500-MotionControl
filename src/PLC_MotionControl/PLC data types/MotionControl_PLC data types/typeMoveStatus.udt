@@ -1,0 +1,9 @@
+﻿TYPE "typeMoveStatus"
+VERSION : 0.1
+   STRUCT
+      global : Bool;
+      axis : Array[1.."AXIS_NUM"] of Bool;
+   END_STRUCT;
+
+END_TYPE
+

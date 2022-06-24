@@ -1,0 +1,10 @@
+﻿TYPE "typeSatParam"
+VERSION : 0.1
+   STRUCT
+      deltaSatGainNeg : Real;
+      deltaSatGainPos : Real;
+      satLevels : Array[1.."AXIS_NUM"] of Real;
+   END_STRUCT;
+
+END_TYPE
+

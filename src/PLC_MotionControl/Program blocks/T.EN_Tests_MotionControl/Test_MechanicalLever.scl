@@ -1,0 +1,119 @@
+﻿FUNCTION "Test_MechanicalLever" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      axisParam : "typeAxisParam";
+      angle : Real;
+      lever : Real;
+      leverRef : Real;
+      testResult : Bool;
+   END_VAR
+
+
+BEGIN
+	(* First cases : test slewing direct (CAO data from Aker RA216668) *)
+	#axisParam.axisType := 'direct';
+	#axisParam.movingCylinder := True;
+	#axisParam.bodyPivotPos[1] := 0.224;
+	#axisParam.bodyPivotPos[2] := 0.775;
+	#axisParam.rodPivotPos[1] := 0.435;
+	#axisParam.rodPivotPos[2] := 0.05;
+	#axisParam.angleOffset := 0.0;
+	
+	(* Angle phi = -40° *)
+	#angle := -0.6981317;
+	#leverRef := 0.34977;
+	#lever := "MechanicalLever"(axisAngle := #angle,
+	                            axisParam := #axisParam);
+	#testResult := "Test_RealError"(errorType := 'abs',
+	                                tol := 1.0e-3,
+	                                reference := #leverRef,
+	                                value := #lever);
+	
+	(* Angle @ phi = 0° *)
+	#angle := 0.0;
+	#leverRef := 0.43164;
+	#lever := "MechanicalLever"(axisAngle := #angle,
+	                            axisParam := #axisParam);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                reference := #leverRef,
+	                                                value := #lever);
+	
+	(* Angle @ phi = 30° *)
+	#angle := 0.52359878;
+	#leverRef := 0.3628;
+	#lever := "MechanicalLever"(axisAngle := #angle,
+	                            axisParam := #axisParam);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                reference := #leverRef,
+	                                                value := #lever);
+	
+	(* Second cases : test outboard direct (CAO data from DSME RA202560) *)
+	#axisParam.axisType := 'direct';
+	#axisParam.movingCylinder := False;
+	#axisParam.bodyPivotPos[1] := 1.268;
+	#axisParam.bodyPivotPos[2] := 1.228;
+	#axisParam.rodPivotPos[1] := 1.233;
+	#axisParam.rodPivotPos[2] := 0.561;
+	#axisParam.angleOffset := 1.570796;
+	
+	(* Angle beta = 80° *)
+	#angle := 1.3962634;
+	#leverRef := 1.3267;
+	#lever := "MechanicalLever"(axisAngle := #angle,
+	                            axisParam := #axisParam);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                reference := #leverRef,
+	                                                value := #lever);
+	
+	(* Angle beta = 10° *)
+	#angle := 0.17453293;
+	#leverRef := 0.98318;
+	#lever := "MechanicalLever"(axisAngle := #angle,
+	                            axisParam := #axisParam);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                reference := #leverRef,
+	                                                value := #lever);
+	
+	(* Angle beta = -20° *)
+	#angle := -0.34906585;
+	#leverRef := 0.65122;
+	#lever := "MechanicalLever"(axisAngle := #angle,
+	                            axisParam := #axisParam);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                reference := #leverRef,
+	                                                value := #lever);
+	
+	(* Third cases : double or sheave cases *)
+	#axisParam.axisType := 'double';
+	#axisParam.sheaveDiam := 10.0;
+	#angle := 2.85738; // random value
+	#leverRef := 5.0;
+	#lever := "MechanicalLever"(axisAngle := #angle,
+	                            axisParam := #axisParam);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                reference := #leverRef,
+	                                                value := #lever);
+	
+	#axisParam.axisType := 'sheave';
+	#axisParam.sheaveDiam := 7.0;
+	#angle := 2.85738; // random value
+	#leverRef := 3.5;
+	#lever := "MechanicalLever"(axisAngle := #angle,
+	                            axisParam := #axisParam);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                reference := #leverRef,
+	                                                value := #lever);
+	
+	#Test_MechanicalLever := #testResult;
+	
+	
+END_FUNCTION
+

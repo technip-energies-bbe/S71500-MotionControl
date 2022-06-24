@@ -1,0 +1,42 @@
+﻿FUNCTION_BLOCK "AngularInputs"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      inputs : Array[1.."AXIS_NUM"] of Real;
+      timeCycle : Real;
+      angleInputParam : "typeAngleInputParam";
+   END_VAR
+
+   VAR_OUTPUT 
+      outputs : Array[1.."AXIS_NUM"] of Real;
+   END_VAR
+
+   VAR 
+      InstFirstOrderFilters : Array[1.."AXIS_NUM"] of "FirstOrderFilter";
+   END_VAR
+
+   VAR_TEMP 
+      scaledInputs : Array[1.."AXIS_NUM"] of Real;
+      axisCounter : Int;
+   END_VAR
+
+
+BEGIN
+	
+	(* This block is used to process angular values from CPMS sensors :
+	- A scaling module is called first
+	- Then a first order filter is applied *)
+	
+	FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	    #scaledInputs[#axisCounter] := "Scaling"(input := #inputs[#axisCounter],
+	                                             scaleParam := #angleInputParam.scalingParams[#axisCounter]);
+	    
+	    #InstFirstOrderFilters[#axisCounter](input := #scaledInputs[#axisCounter],
+	                                         timeConstant := #angleInputParam.filterTimeConsts[#axisCounter],
+	                                         timeCycle := #timeCycle,
+	                                         enable := TRUE,
+	                                         output => #outputs[#axisCounter]);
+	END_FOR;
+	
+END_FUNCTION_BLOCK
+

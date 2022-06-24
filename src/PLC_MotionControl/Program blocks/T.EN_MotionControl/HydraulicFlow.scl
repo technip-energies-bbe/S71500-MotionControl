@@ -1,0 +1,19 @@
+﻿FUNCTION "HydraulicFlow" : Real
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      axisParam : "typeAxisParam";
+   END_VAR
+
+   VAR CONSTANT 
+      NOM_PRES_DROP : Real := 500000.0;
+   END_VAR
+
+
+BEGIN
+	(* Proportionnal valve hydraulic flow calculation *)
+	#HydraulicFlow := #axisParam.nomFlow * SQRT(#axisParam.presDrop / #NOM_PRES_DROP);
+	
+	
+END_FUNCTION
+

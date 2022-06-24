@@ -1,0 +1,76 @@
+﻿FUNCTION_BLOCK "Test_SecondOrderAndIntegrator"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      input : Real;
+      naturalFrequency : Real;
+      damping : Real;
+      timeCycle : Real;
+   END_VAR
+
+   VAR_OUTPUT 
+      output : Real;
+   END_VAR
+
+   VAR 
+      inputMems : Array[1..3] of LReal := [3(0.0)];
+      outputMems : Array[1..3] of LReal := [3(0.0)];
+   END_VAR
+
+   VAR_TEMP 
+      a1 : LReal;
+      a2 : LReal;
+      a3 : LReal;
+      b0 : LReal;
+      b1 : LReal;
+      b2 : LReal;
+      b3 : LReal;
+      outputInter : LReal;
+      inputInter : LReal;
+   END_VAR
+
+
+BEGIN
+	(* Coefficients of a general discrete transfer function
+	These coefficients have been discretized thanks TO Backward Euler 
+	approximation of a continuous second order system with an integrator *)
+	(*#a1 := 2.0 * #timeCycle * #naturalFrequency * #damping - 3.0;
+	#a2 := #timeCycle ** 2 * #naturalFrequency ** 2 - 4.0 * #damping * #timeCycle * #naturalFrequency + 3.0;
+	#a3 := 2.0 * #damping * #timeCycle * #naturalFrequency - 1.0 -  #timeCycle ** 2 * #naturalFrequency ** 2;
+	#b0 := 0.0;
+	#b1 := 0.0;
+	#b2 := 0.0;
+	#b3 := #timeCycle ** 3 * #naturalFrequency ** 2;*)
+	
+	(* These coefficients have been discretized thanks to Tutsin approximation 
+	of a continuous second order system with an integrator *)
+	#a1 := -2.971994872300562;
+	#a2 := 2.944384183019426;
+	#a3 := -0.972389310718864;
+	#b0 := 4.930480228774283e-07;
+	#b1 := 1.479144068632285e-06;
+	#b2 := 1.479144068632285e-06;
+	#b3 := 4.930480228774283e-07;
+	
+	#inputInter := REAL_TO_LREAL(#input);
+	
+	#outputInter := #b0 * #inputInter
+	+ #b1 * #inputMems[1]
+	+ #b2 * #inputMems[2]
+	+ #b3 * #inputMems[3]
+	- #a1 * #outputMems[1]
+	- #a2 * #outputMems[2]
+	- #a3 * #outputMems[3];
+	
+	#inputMems[3] := #inputMems[2];
+	#inputMems[2] := #inputMems[1];
+	#inputMems[1] := #inputInter;
+	
+	#outputMems[3] := #outputMems[2];
+	#outputMems[2] := #outputMems[1];
+	#outputMems[1] := #outputInter;
+	
+	#output := LREAL_TO_REAL(#outputInter);
+	
+END_FUNCTION_BLOCK
+

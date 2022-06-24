@@ -1,0 +1,10 @@
+﻿TYPE "typeScaleParam"
+VERSION : 0.1
+   STRUCT
+      axisNum : Int;
+      a : Real;
+      b : Real;
+   END_STRUCT;
+
+END_TYPE
+

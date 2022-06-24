@@ -1,0 +1,32 @@
+﻿FUNCTION "Test_RealVectorError" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      value : Array[1.."TEST_VECTOR_NUM"] of Real;
+      reference : Array[1.."TEST_VECTOR_NUM"] of Real;
+      tol : Real;
+      errorType : String;
+   END_VAR
+
+   VAR_TEMP 
+      errorRes : Bool;
+      itemCounter : Int;
+   END_VAR
+
+
+BEGIN
+	
+	#errorRes := TRUE;
+	
+	FOR #itemCounter := 1 TO "AXIS_NUM" DO
+	    #errorRes := "Test_RealError"(value := #value[#itemCounter],
+	                                  reference := #reference[#itemCounter],
+	                                  tol := #tol,
+	                                  errorType := #errorType)
+	    AND #errorRes;
+	END_FOR;
+	
+	#Test_RealVectorError := #errorRes;
+	
+END_FUNCTION
+

@@ -1,0 +1,11 @@
+﻿TYPE "typeArmParam"
+VERSION : 0.1
+   STRUCT
+      armType : String;
+      armGeom { S7_SetPoint := 'False'} : "typeArmGeom";
+      motionControlParam : "typeMotionControlParam";
+      axisParams : Array[1.."AXIS_NUM"] of "typeAxisParam";
+   END_STRUCT;
+
+END_TYPE
+

@@ -1,0 +1,42 @@
+﻿FUNCTION "Test_Sat" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      input : Real;
+      output : Real;
+      outputRef : Real;
+      testResult : Bool;
+   END_VAR
+
+
+BEGIN
+	(* First case : non-saturated *)
+	#input := 0.678;
+	#outputRef := 0.678;
+	#output := "Sat"(input := #input);
+	#testResult := "Test_RealError"(errorType := 'abs',
+	                                tol := 1.0e-3,
+	                                value := #output,
+	                                reference := #outputRef);
+	
+	(* Second case : positive saturation *)
+	#input := 1.5;
+	#outputRef := 1;
+	#output := "Sat"(input := #input);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #output,
+	                                                reference := #outputRef);
+	
+	(* Third case : negative saturation *)
+	#input := -1.01;
+	#outputRef := -1;
+	#output := "Sat"(input := #input);
+	#testResult := #testResult AND "Test_RealError"(errorType := 'abs',
+	                                                tol := 1.0e-3,
+	                                                value := #output,
+	                                                reference := #outputRef);
+	
+	#Test_Sat := #testResult;
+END_FUNCTION
+

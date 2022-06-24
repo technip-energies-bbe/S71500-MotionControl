@@ -1,0 +1,133 @@
+﻿FUNCTION_BLOCK "Test_AxisRegulation"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_OUTPUT 
+      testResult : Bool;
+   END_VAR
+
+   VAR 
+      InstAxisRegulation { S7_SetPoint := 'False'} : "AxisRegulation";
+   END_VAR
+
+   VAR_TEMP 
+      setpoint : Real;
+      process : Real;
+      regulParam : "typeRegulParam";
+      enable : Bool;
+      timeCycle : Real;
+      output : Real;
+      outputRef : Real;
+   END_VAR
+
+
+BEGIN
+	(* First Call enable = False *)
+	#setpoint := 0.0;
+	#process := 0.0;
+	#regulParam.dOn := 0.0;
+	#regulParam.fOn := 0.0;
+	#regulParam.iOn := 0.0;
+	#regulParam.pOn := 0.0;
+	#regulParam.kP := 1.0;
+	#regulParam.tD := 1.0;
+	#regulParam.tI := 1.0;
+	#enable := False;
+	#timeCycle := 2.0;
+	
+	#InstAxisRegulation(enable := #enable,
+	                    setpoint := #setpoint,
+	                    process := #process,
+	                    regulParam := #regulParam,
+	                    timeCycle := #timeCycle,
+	                    output => #output);
+	
+	#outputRef := 0.0;
+	
+	#testResult := "Test_RealError"(value := #output,
+	                                reference := #outputRef,
+	                                errorType := 'abs',
+	                                tol := 1.0e-4);
+	
+	(* Second Call enable = True with Feedforward*)
+	#setpoint := 1.0;
+	#process := 0.0;
+	#regulParam.dOn := 0.0;
+	#regulParam.fOn := 1.0;
+	#regulParam.iOn := 0.0;
+	#regulParam.pOn := 0.0;
+	#regulParam.kP := 1.0;
+	#regulParam.tD := 1.0;
+	#regulParam.tI := 1.0;
+	#enable := True;
+	#timeCycle := 2.0;
+	
+	#InstAxisRegulation(enable := #enable,
+	                    setpoint := #setpoint,
+	                    process := #process,
+	                    regulParam := #regulParam,
+	                    timeCycle := #timeCycle,
+	                    output => #output);
+	
+	#outputRef := 0.5;
+	
+	#testResult := #testResult AND "Test_RealError"(value := #output,
+	                                                reference := #outputRef,
+	                                                errorType := 'abs',
+	                                                tol := 1.0e-4);
+	
+	(* Third Call enable = True with Proportionnal *)
+	#setpoint := 1.0;
+	#process := 0.0;
+	#regulParam.dOn := 0.0;
+	#regulParam.fOn := 0.0;
+	#regulParam.iOn := 0.0;
+	#regulParam.pOn := 1.0;
+	#regulParam.kP := 3.0;
+	#regulParam.tD := 1.0;
+	#regulParam.tI := 1.0;
+	#enable := True;
+	#timeCycle := 2.0;
+	
+	#InstAxisRegulation(enable := #enable,
+	                    setpoint := #setpoint,
+	                    process := #process,
+	                    regulParam := #regulParam,
+	                    timeCycle := #timeCycle,
+	                    output => #output);
+	
+	#outputRef := 3.0 / 2.0;
+	
+	#testResult := #testResult AND "Test_RealError"(value := #output,
+	                                                reference := #outputRef,
+	                                                errorType := 'abs',
+	                                                tol := 1.0e-4);
+	
+	(* Last Call enable = False *)
+	#setpoint := 1.0;
+	#process := 0.0;
+	#regulParam.dOn := 0.0;
+	#regulParam.fOn := 0.0;
+	#regulParam.iOn := 0.0;
+	#regulParam.pOn := 1.0;
+	#regulParam.kP := 3.0;
+	#regulParam.tD := 1.0;
+	#regulParam.tI := 1.0;
+	#enable := False;
+	#timeCycle := 2.0;
+	
+	#InstAxisRegulation(enable := #enable,
+	                    setpoint := #setpoint,
+	                    process := #process,
+	                    regulParam := #regulParam,
+	                    timeCycle := #timeCycle,
+	                    output => #output);
+	
+	#outputRef := 0.0;
+	
+	#testResult := #testResult AND "Test_RealError"(value := #output,
+	                                                reference := #outputRef,
+	                                                errorType := 'abs',
+	                                                tol := 1.0e-4);
+	
+END_FUNCTION_BLOCK
+

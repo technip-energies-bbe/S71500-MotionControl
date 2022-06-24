@@ -1,0 +1,16 @@
+﻿TYPE "typeMotionControlParam"
+VERSION : 0.1
+   STRUCT
+      angleInputParam : "typeAngleInputParam";
+      remoteInputParam : "typeRemoteInputParam";
+      angularSpeedGains : Array[1.."AXIS_NUM"] of Real;
+      cartSpeedGains : Array[1.."AXIS_NUM"] of Real;
+      regulParams : Array[1.."AXIS_NUM"] of "typeRegulParam";
+      outputParam : "typePropOutputParam";
+      satParam : "typeSatParam";
+      minSetpoint { S7_SetPoint := 'True'} : Real;
+      minSpeed : Real;
+   END_STRUCT;
+
+END_TYPE
+

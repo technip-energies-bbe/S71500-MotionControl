@@ -1,0 +1,77 @@
+﻿FUNCTION "ArmCompliance" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      setpointConv : Array[1.."AXIS_NUM"] of Real;
+      setpointCart : Array[1.."AXIS_NUM"] of Real;
+      armParam : "typeArmParam";
+      easyDriveOn : Bool;
+      moveStatus : "typeMoveStatus";
+      angles : Array[1.."AXIS_NUM"] of Real;
+   END_VAR
+
+   VAR_OUTPUT 
+      setpointProps : Array[1.."AXIS_NUM"] of Real;
+   END_VAR
+
+   VAR_TEMP 
+      maxflow : Array[1.."AXIS_NUM"] of Real;
+      axisCounter : Int;
+      adaptSetpointEasy : Array[1.."AXIS_NUM"] of Real;
+   END_VAR
+
+
+BEGIN
+	(* Adapt setpoint to specific arm *)
+	
+	FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	    #maxflow[#axisCounter] := "HydraulicFlow"(axisParam := #armParam.axisParams[#axisCounter]);
+	END_FOR;
+	
+	FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	    #setpointProps[#axisCounter] := 0.0;
+	END_FOR;
+	
+	"ArmTypeAdapt"(setpointCart := #setpointCart,
+	               armParam := #armParam,
+	               adaptSetpointCart => #adaptSetpointEasy);
+	
+	(* Main calculation *)
+	IF #easyDriveOn = TRUE THEN
+	    (* Mode easyDrive *)
+	    IF #moveStatus.global = TRUE THEN
+	        FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	            #setpointProps[#axisCounter] := #adaptSetpointEasy[#axisCounter]
+	            * "MechanicalLever"(axisAngle := #angles[#axisCounter],
+	                                axisParam := #armParam.axisParams[#axisCounter])
+	            * "HydraulicLever"(axisParam := #armParam.axisParams[#axisCounter],
+	                               axisSpeed := #setpointCart[#axisCounter])
+	            / #maxflow[#axisCounter];
+	        END_FOR;
+	    ELSE
+	        FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	            #setpointProps[#axisCounter] := 0.0;
+	        END_FOR;
+	    END_IF;
+	ELSE
+	    (* Mode conventionnal *)
+	    IF #moveStatus.global = TRUE THEN
+	        FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	            #setpointProps[#axisCounter] := #setpointConv[#axisCounter]
+	            * "MechanicalLever"(axisAngle := #angles[#axisCounter],
+	                                axisParam := #armParam.axisParams[#axisCounter])
+	            * "HydraulicLever"(axisParam := #armParam.axisParams[#axisCounter],
+	                               axisSpeed := #setpointConv[#axisCounter])
+	            / #maxflow[#axisCounter];
+	        END_FOR;
+	    ELSE
+	        FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	            #setpointProps[#axisCounter] := 0.0;
+	        END_FOR;
+	    END_IF;
+	END_IF;
+	
+	
+	
+END_FUNCTION
+

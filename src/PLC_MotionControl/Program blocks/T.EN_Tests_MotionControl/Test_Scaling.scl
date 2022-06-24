@@ -1,0 +1,39 @@
+﻿FUNCTION "Test_Scaling" : Bool
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_TEMP 
+      Input : Real;
+      ScalingRetVal : Real;
+      ScaleParam : "typeScaleParam";
+      refRes : Real;
+      errorRes : Bool;
+   END_VAR
+
+
+BEGIN
+	(* Fixed parameters *)
+	// Real value
+	#Input := 10.0;
+	// Scaling parameters
+	#ScaleParam.axisNum := 1;
+	#ScaleParam.a := 2.0;
+	#ScaleParam.b := 3.0;
+	// Reference result
+	#refRes := 23.0;
+	
+	// Scaling result
+	#ScalingRetVal := "Scaling"(input := #Input, scaleParam := #ScaleParam);
+	
+	#errorRes := "Test_RealError"(value := #ScalingRetVal,
+	                              tol := 0.0001,
+	                              reference := #refRes,
+	                              errorType := 'abs');
+	
+	// Result of the test block
+	#Test_Scaling := #errorRes;
+	
+	
+	
+	
+END_FUNCTION
+

@@ -1,0 +1,56 @@
+﻿FUNCTION_BLOCK "RemoteInputs"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      easyDriveOn : Bool;
+      enable : Bool;
+      inputs : Array[1.."AXIS_NUM"] of Real;
+      timeCycle : Real;
+      motionControlParam : "typeMotionControlParam";
+   END_VAR
+
+   VAR_OUTPUT 
+      outputs : Array[1.."AXIS_NUM"] of Real;
+      status : "typeMoveStatus";
+   END_VAR
+
+   VAR 
+      InstFirstOrderFilters : Array[1.."AXIS_NUM"] of "FirstOrderFilter";
+   END_VAR
+
+   VAR_TEMP 
+      scaledInputs : Array[1.."AXIS_NUM"] of Real;
+      axisCounter : Int;
+   END_VAR
+
+
+BEGIN
+	(* This block is used to process angular values from remote control :
+	- A compliance module is called on all axis first. This module takes 
+	care of axis exchange between conventionnel mode and easyDrive mode.
+	Scaling is also done.
+	- Then a first order filter is applied on each axis.
+	- Finally, a setpoint check is done *)
+	
+	"RemoteCompliance"(easyDriveOn := #easyDriveOn,
+	                   convScalingParams := #motionControlParam.#remoteInputParam.convScalingParams,
+	                   easyScalingParams := #motionControlParam.#remoteInputParam.easyScalingParams,
+	                   inputs := #inputs,
+	                   outputs => #scaledInputs);
+	
+	FOR #axisCounter := 1 TO "AXIS_NUM" DO
+	    #InstFirstOrderFilters[#axisCounter](input := #scaledInputs[#axisCounter],
+	                                         timeConstant := #motionControlParam.#remoteInputParam.filterTimeConsts[#axisCounter],
+	                                         timeCycle := #timeCycle,
+	                                         enable := #enable,
+	                                         output => #outputs[#axisCounter]);
+	END_FOR;
+	
+	(* TODO : check if SetpointCheck needs to be applied on #inputs or #outputs *)
+	"SetpointCheck"(setSpeeds := #inputs,
+	                motionControlParam := #motionControlParam,
+	                status => #status);
+	
+	
+END_FUNCTION_BLOCK
+
